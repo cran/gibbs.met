@@ -5,12 +5,12 @@
 ## p                --- the dim of variables sampled
 ## x0               --- the initial value
 ## stepsizes_met    --- a vector of length p, with
-##                  stepsizes_met[i] being the standard deviation of Gaussian proposal
-##                  for updating 'i'th parameter
+##                  stepsizes_met[i] being the standard deviation of 
+##                  Gaussian proposal for updating 'i'th parameter
 ## iters_per.iter   --- for each transition specified by `iters', 
 ##                  the Markov chain sampling is run 'iters_per.iter' times
 ##                  this argument is used to avoid saving the whole Markov chain
-## ...          --- extra arguments needed to compute log_f
+## ...              --- extra arguments needed to compute log_f
 
 ## a matrix with of (iters + 1) * p is returned, with each row for an iteration
 
@@ -19,6 +19,8 @@ gibbs_met <- function(log_f,p,x0,iters_mc,iters_met,stepsizes_met,
 {
    if(p != length(x0))
       stop("The number of variables in initial values does NOT match p")
+   if(!is.finite(log_f(x0,...))) 
+      stop("The initial value has 0 probability") 
    chain <- matrix(0, iters_mc + 1, p)
    chain[1,] <- x0
 
@@ -64,12 +66,14 @@ met_gaussian <- function(log_f,iters, p, x0, stepsizes, iters_per.iter=1, ...)
 {   
     if(p != length(x0))
       stop("The number of variables in initial values does NOT match p")
+    if(!is.finite(log_f(x0,...))) 
+      stop("The initial value has 0 probability") 
 
     ## creating a matrix to save the Markov chain, with each row for an iteration
     chain <- matrix(0,iters+1,p)
     chain[1,] <- x0
+    
     old_log_f <- log_f(x0,...)
-
     ## doing one transition
     one_transition <- function(i)
     {   chain[i,] <<- chain[i-1,]
