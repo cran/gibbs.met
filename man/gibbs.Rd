@@ -13,34 +13,31 @@ The function \code{gibbs_met} performs Gibbs sampling with each 1-dimensional di
 }
 
 \usage{
-gibbs_met(log_f,p,x0,iters_mc,iters_met,stepsizes_met,
-          iters_per.iter=1,...)
-met_gaussian(log_f,iters, p, x0, stepsizes, iters_per.iter=1, ...)
+gibbs_met(log_f,no_var,ini_value,
+          iters,iters_per.iter=1,iters_met,stepsizes_met, ...)
+met_gaussian(log_f, no_var, ini_value, 
+             iters,iters_per.iter=1,stepsizes_met, ...)
 }
 
 \arguments{
 \item{log_f}{the log of the density function from which one wants to sample.}
 
-\item{p}{the number of variables to be sampled.}
+\item{no_var}{the number of variables to be sampled.}
 
-\item{x0}{the initial value.}
+\item{ini_value}{the initial value.}
 
-\item{iters_mc, iters}{iterations of Gibbs sampling or Metropolis update.}
+\item{iters,iters_per.iter}{Run \code{iters} super-transition, each consisting of \code{iters_per.iter} single Markov chain update (using Gibbs sampling or Metropolis sampling). Only the state at the end of each super-transition is saved and returned.}
 
-\item{iters_per.iter}{for each transition specified by \code{iters} or \code{iters_mc}, the Markov chain sampling is run \code{iters_per.iter} times. This argument is used to avoid saving the whole Markov chain.}
+\item{iters_met}{iterations of updating each 1-dim conditional distribution with Metropolis method in Gibbs sampling using the function \code{gibbs_met}.}
 
-\item{iters_met}{iterations of Metropolis for each 1-dimensional sampling.}
-
-\item{stepsizes_met}{a vector of length p, with \code{stepsizes_met[i]} being the standard deviation of Gaussian proposal for updating 'i'th variable.}
-
-\item{stepsizes}{the same as \code{stepsizes_met} for the function \code{met_gaussian}.}
+\item{stepsizes_met}{a vector of length \code{no_var}, with \code{stepsizes_met[i]} being the standard deviation of Gaussian proposal for updating 'i'th variable, which is used either in Gibbs sampling for sampling from the 'i'th conditional distribution, or used in multivariate Metropolis sampling (using the function \code{met_gaussian}) for 'i'th variable.}
 
 \item{...}{extra arguments needed to compute \code{log_f}.}
 
 }
 
 \value{
-a matrix with dim \code{(iters_mc + 1) * p} or \code{(iters +1) * p} is returned, with each row for an iteration
+a matrix with dim \code{(iters +1) * no_var} is returned, with each row for an iteration
 }
 
 \examples{
@@ -61,7 +58,8 @@ log_pdf_mnormal <- function(x, mu, A)
 ## sampling from a bivariate normal distribution with correlation 0.1,  
 ## both marginal standard deviations 1, mean vector (0,5)
 A <- solve(matrix(c(1,0.1,0.1,1),2,2))
-mc_mvn <- gibbs_met(log_f=log_pdf_mnormal,2,x0=c(0,0),iters_mc=1000,iters_met=5,
+mc_mvn <- gibbs_met(log_f=log_pdf_mnormal,no_var=2,
+                    ini_value=c(0,0),iters=400,iters_met=2,
                     stepsizes_met=c(0.5,0.5), mu=c(0,5), A = A)
 
 postscript("mc_mvn_lowcor.eps",width=7,height=8,horiz=FALSE)
@@ -116,8 +114,9 @@ mu1 <- c(0,0)
 mu2 <-c(4,4)
 
 ## performing Gibbs sampling
-mc_mvn <- gibbs_met(log_f=log_pdf_twonormal,2,x0=c(0,0),iters_mc=4000,iters_met=5,
-                    stepsizes_met=c(0.5,0.5),mu1=mu1,mu2=mu2,A1=A1,A2=A2)
+mc_mvn <- gibbs_met(log_f=log_pdf_twonormal,no_var=2,ini_value=c(0,0),
+                   iters=400,iters_met=2,stepsizes_met=c(0.5,0.5),
+                   mu1=mu1,mu2=mu2,A1=A1,A2=A2)
 
 postscript("mc_mvn_closemix.eps",width=7,height=8,horiz=FALSE)
 
@@ -156,9 +155,9 @@ mu1 <- c(0,0)
 mu2 <-c(6,6)
 
 ## performing Gibbs sampling
-mc_mvn <- met_gaussian(log_f=log_pdf_twonormal,p=2,x0=c(0,0),iters=4000, 
-                  iters_per.iter=10,stepsizes=c(1,1),
-                  mu1=mu1,mu2=mu2,A1=A1,A2=A2)
+mc_mvn <- met_gaussian(log_f=log_pdf_twonormal,no_var=2,ini_value=c(0,0),
+                       iters=400,iters_per.iter=2,stepsizes=c(1,1),
+                       mu1=mu1,mu2=mu2,A1=A1,A2=A2)
 
 postscript("mc_mvn_farmix_met.eps",width=7,height=8,horiz=FALSE)
 
